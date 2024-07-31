@@ -1,0 +1,46 @@
+<launch>
+    <arg name="input_cloud"                                             default="input_point_cloud"/>
+    <arg name="map_resolution"                                         default="0.5"/>
+    <arg name="map_frame_id"                                           default="map"/>
+    <arg name="generate_height_map"                                    default="true"/>
+    <arg name="apply_color_map"                                        default="false"/>
+    <arg name="enable_latch"                                          default="true"/>
+    <arg name="apply_ground_filter"                                    default="false"/>
+    <arg name="ground_filter_distance"                                 default="0.2"/>
+    <arg name="ground_filter_plane_distance"                           default="0.5"/>
+    <arg name="max_z_occupancy"                                        default="12.0"/>
+    <arg name="min_z_occupancy"                                        default="1.0"/>
+    <arg name="max_x_pointcloud"                                       default="120.0"/>
+    <arg name="min_x_pointcloud"                                       default="-10.0"/>
+    <arg name="max_y_pointcloud"                                       default="60.0"/>
+    <arg name="min_y_pointcloud"                                       default="-60.0"/>
+    <arg name="max_z_pointcloud"                                       default="30.0"/>
+    <arg name="min_z_pointcloud"                                       default="0.5"/>
+    <arg name="sensor_range_max"                                       default="120.0"/>
+    <arg name="remove_speckles"                                        default="false"/>
+
+  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_node">
+    <param name="resolution"                                          value="$(arg map_resolution)" />
+    <param name="frame_id"                       type="string"   value="$(arg map_frame_id)" />
+    <param name="base_frame_id"                  type="string"   value="$(arg map_frame_id)" />
+    <param name="height_map"                     type="bool"     value="$(arg generate_height_map)" />
+    <param name="colored_map"                    type="bool"     value="$(arg apply_color_map)" /> 
+    <param name="latch"                          type="bool"     value="$(arg enable_latch)" /> 
+    <param name="filter_ground"                  type="bool"     value="$(arg apply_ground_filter)" /> 
+    <param name="ground_filter/distance"         type="double"   value="$(arg ground_filter_distance)" /> 
+    <param name="ground_filter/plane_distance"   type="double"   value="$(arg ground_filter_plane_distance)" />
+    <param name="occupancy_max_z"                type="double"   value="$(arg max_z_occupancy)" /> 
+    <param name="occupancy_min_z"                type="double"   value="$(arg min_z_occupancy)" />
+    <param name="pointcloud_max_x"               type="double"   value="$(arg max_x_pointcloud)" />
+    <param name="pointcloud_min_x"               type="double"   value="$(arg min_x_pointcloud)" />
+    <param name="pointcloud_max_y"               type="double"   value="$(arg max_y_pointcloud)" />
+    <param name="pointcloud_min_y"               type="double"   value="$(arg min_y_pointcloud)" />
+    <param name="pointcloud_max_z"               type="double"   value="$(arg max_z_pointcloud)" />
+    <param name="pointcloud_min_z"               type="double"   value="$(arg min_z_pointcloud)" />
+    <param name="sensor_model/max_range"         type="double"   value="$(arg sensor_range_max)" />
+    <param name="filter_speckles"                type="bool"     value="$(arg remove_speckles)" />
+
+    <remap from="/cloud_in" to="$(arg input_cloud)" />
+  </node>
+
+</launch>

@@ -1,0 +1,49 @@
+<launch>
+  <arg name="altered_state_estimate" default="false" />
+  <arg name="primary_host" default="192.168.1.1" />
+  <arg name="secondary_host" default="192.168.1.2" />
+  <arg name="drone_name" default="DroneQuad" />
+  <arg name="state_port" default="8888" />
+  <arg name="command_port" default="54321" />
+
+  <group ns="$(arg drone_name)">
+    <node pkg="simulation" type="unity_ros" name="unity_ros_node" args="$(arg primary_host) $(arg state_port)">
+      <remap from="$(arg drone_name)/Sensors/DepthCamera/camera_info" to="Sensors/DepthCamera/camera_info" />
+      <remap from="$(arg drone_name)/Sensors/DepthCamera/image_raw" to="Sensors/DepthCamera/image_raw" />
+      <remap from="$(arg drone_name)/Sensors/IMU/pose" to="Sensors/IMU/pose" />
+      <remap from="$(arg drone_name)/Sensors/IMU/twist" to="Sensors/IMU/twist" />
+      <remap from="$(arg drone_name)/Sensors/RGBCameraLeft/camera_info" to="Sensors/RGBCameraLeft/camera_info" />
+      <remap from="$(arg drone_name)/Sensors/RGBCameraLeft/image_raw" to="Sensors/RGBCameraLeft/image_raw" />
+      <remap from="$(arg drone_name)/Sensors/RGBCameraRight/camera_info" to="Sensors/RGBCameraRight/camera_info" />
+      <remap from="$(arg drone_name)/Sensors/RGBCameraRight/image_raw" to="Sensors/RGBCameraRight/image_raw" />
+
+      <param name="infinite_distance" type="double" value="120.0"/>
+    </node>
+    <node pkg="simulation" type="state_estimate_corruptor_node" name="state_corruptor_$(arg drone_name)">
+      <remap from="/true_pose" to="Sensors/IMU/pose" />
+      <remap from="/true_twist" to="Sensors/IMU/twist" />
+      <remap from="/pose_est" to="Estimation/pose" />
+      <remap from="/twist_est" to="Estimation/twist" />
+      <remap from="/current_state_est" to="Estimation/current_state" />
+
+      <param if="$(arg altered_state_estimate)" name="drift_rw_factor" value="0.05"/>
+      <param unless="$(arg altered_state_estimate)" name="drift_rw_factor" value="0.0"/>
+
+      <param if="$(arg altered_state_estimate)" name="pos_white_sig" value="0.01"/>
+      <param unless="$(arg altered_state_estimate)" name="pos_white_sig" value="0.0"/>
+
+      <param if="$(arg altered_state_estimate)" name="jump_seconds" value="15.0"/>
+      <param unless="$(arg altered_state_estimate)" name="jump_seconds" value="-1.0"/>
+    </node>
+
+    <node pkg="simulation" type="transform_broadcaster" name="world_to_base" args="Estimation/pose world $(arg drone_name)"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="Sensors_to_body" args="0.2 0 0 -1.5707963 0 0 $(arg drone_name) $(arg drone_name)/Sensors" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="DepthCamera_to_Sensors" args="0 0 0 0 0 -1.5707963 $(arg drone_name)/Sensors $(arg drone_name)/Sensors/DepthCamera" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="RGB_Cam_Left_to_Sensors" args="-0.1 0 0 0 0 -1.5707963 $(arg drone_name)/Sensors $(arg drone_name)/Sensors/RGBCameraLeft" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="RGB_Cam_Right_to_Sensors" args="0.1 0 0 0 0 -1.5707963 $(arg drone_name)/Sensors $(arg drone_name)/Sensors/RGBCameraRight" />
+
+    <node pkg="simulation" type="w_to_unity" name="command_to_unity" args="$(arg secondary_host) $(arg command_port)">
+      <remap from="rotor_speed_cmds" to="Commands/rotor_speed_cmds" />
+    </node>
+  </group>
+</launch>
